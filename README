@@ -1,0 +1,30 @@
+campfire-cli is a simple command line interface to 37signals campfire product. 
+
+== Requirements ==
+
+
+== Usage ==
+
+Define the campfire accounts and chat rooms you want to use in ~/.campfire.yml file. It is a simple yml file, mine looks like this:
+
+
+underlog:
+   domain: underlg
+   username: underlog(at)gmail
+   password: passs
+   default-room: Room 1
+
+underlog-room2:
+   domain: underlg
+   username: underlog(at)gmail
+   password: passs
+   default-room: Room 2
+   # ssl: true #uncomment this if you use paid accounts
+
+#vim: filetype=yaml
+
+
+The default-room is optional, and if missed, you will be presented by a list of options.
+
+== TODO ==
+Many stuff ;)
