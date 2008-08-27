@@ -1,0 +1,98 @@
+#!/usr/local/bin/ruby
+
+require 'rubygems'
+require 'tinder'
+require 'yaml'
+
+include Tinder
+
+rooms = File.join() 
+@chats = YAML.load_file(ENV['HOME'] + '/.campfire.yml')
+puts "Available chats:"
+@chats.keys.each_with_index do |key, index|
+  puts "(#{index}) #{key}"
+end
+
+puts "Which one do you want to join?"
+
+chat_index = gets.strip.to_i || 0
+
+conf = @chats.values[chat_index]
+
+chat_name = @chats.keys[chat_index]
+
+
+puts "Joining #{chat_name} ..."
+
+
+campfire = Campfire.new conf['domain'], :ssl => conf['ssl']
+puts "Logging in..."
+campfire.login conf['username'], conf['password']
+puts "Logged in!"
+
+unless conf['default-room']
+  puts "Available rooms:"
+
+  campfire.rooms.each_with_index do |room, index|
+    puts "(#{index}) #{room.name}"
+  end
+
+  puts "Join which one?"
+  room_index = gets.strip.to_i
+  room = campfire.rooms[room_index]
+else
+  room = campfire.find_room_by_name conf["default-room"]
+end
+
+puts "Joining #{room.name} ..."
+room.join(true)
+puts "Entered room #{room.name}"
+
+
+puts "Listening for messages..."
+
+def print_message(msg)
+  puts "\n\e[32m#{msg[:person]}: \e[0m#{msg[:message]}"
+  $stdout.print "Say what?: "
+  $stdout.flush
+end
+
+def users(room)
+  puts "Users:"
+  u = Hpricot.parse(room.users.to_s)
+  u.search('//span').each do |span|
+    puts "# #{span.children.first}"
+  end
+end
+
+Thread.new(room) do |listener|
+  listener.listen do |msg|
+    print_message msg
+  end
+end
+
+commands = {
+  '/users' => lambda { |room| users(room) },
+  '/exit' => lambda { |room| room.leave; exit },
+  '/history' => lambda do |room| 
+    transcript = room.transcript room.available_transcripts.last
+    transcript.each do |message|
+      p message
+      # print_message message
+    end
+  end,
+}
+
+while true
+  $stdout.print "\e[31mSay what?: \e[0m"
+  $stdout.flush
+  msg = gets.strip
+  if commands[msg]
+    commands[msg].call(room)
+    next
+  end
+  puts "Me: #{msg}"
+  room.speak msg
+end
+
+#vim: filetype=ruby
