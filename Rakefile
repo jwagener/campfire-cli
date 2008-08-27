@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'echoe'  
 
 Echoe.new('campfire-cli', '0.0.1') do |p|
